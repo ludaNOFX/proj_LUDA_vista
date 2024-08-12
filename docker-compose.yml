@@ -1,0 +1,52 @@
+version: "3"
+services:
+
+  postgres:
+    image: postgres:14.3
+    restart: always
+    ports:
+      - "5432:5432"
+    volumes:
+      - $HOME/docker/volumes/postgres/luda_db:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_USER=luda
+      - POSTGRES_PASSWORD=peru1994peru
+      - POSTGRES_DB=luda_api
+      - POSTGRES_SERVER=postgres
+
+  app:
+    build:
+      dockerfile: Dockerfile
+      context: .
+    container_name: app
+    restart: always
+    depends_on:
+      - postgres
+    ports:
+      - "5000:5000"
+    environment:
+      - SQLALCHEMY_DATABASE_URI=${SQLALCHEMY_DATABASE_URI}
+      - SECRET_KEY=${SECRET_KEY}
+    volumes:
+      - $HOME/docker/volumes/luda_app:/var/lib
+
+  elasticsearch:
+    image: elasticsearch:8.8.0
+    ports:
+      - "9200:9200"
+    environment:
+      - discovery.type=single-node
+      - xpack.security.enabled=false
+      - xpack.security.enrollment.enabled=true
+
+  kibana:
+    image: docker.elastic.co/kibana/kibana:8.2.3
+    ports:
+      - "5601:5601"
+    environment:
+      - ELASTICSEARCH_HOSTS=http://elasticsearch:9200
+    depends_on:
+      - elasticsearch
+
+
+
